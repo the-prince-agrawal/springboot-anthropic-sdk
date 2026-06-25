@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: springboot-anthropic-sdk
+
+anthropic:
+  api-key:  ${EP_ACC_ANTHOPIC_KEY}
+  model: claude-haiku-4-5-20251001
+  max-tokens: 1000
