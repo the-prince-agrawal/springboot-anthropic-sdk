@@ -4,6 +4,7 @@ import com.anthropic.client.AnthropicClient;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.prince.anthropic.sdk.enums.Role;
+import com.prince.anthropic.sdk.enums.Temperature;
 import com.prince.anthropic.sdk.models.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ public class AnthropicApiClient {
     @Value("${anthropic.max-tokens}")
     private Integer maxTokens;
 
-    public String chat(List<ChatMessage> history, String systemPrompt) {
+    public String chat(List<ChatMessage> history, String systemPrompt, Temperature temperature) {
 
         log.debug("Chat history: {}", history);
         log.debug("System prompt: {}", systemPrompt);
@@ -33,7 +34,10 @@ public class AnthropicApiClient {
         MessageCreateParams.Builder builder = MessageCreateParams.builder()
             .model(model)
             .maxTokens(maxTokens)
-            .system(systemPrompt);
+            .system(systemPrompt)
+            // temperature() is deprecated by Anthropic.
+            // This is included only for learning/demo purposes.
+            .temperature(temperature.getValue());
 
         for (ChatMessage message : history) {
             if (message.getRole() == Role.USER) {

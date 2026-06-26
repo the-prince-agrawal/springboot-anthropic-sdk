@@ -7,6 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum SystemPrompt {
 
+    GENERAL_ASSISTANT(
+        "GENERAL_ASSISTANT",
+        "You are a helpful AI assistant. Answer accurately, clearly, concisely, and use examples when helpful."
+    ),
+
     GENERAL_TEACHER(
         "GENERAL_TEACHER",
         """

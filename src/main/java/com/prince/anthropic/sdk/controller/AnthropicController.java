@@ -26,7 +26,7 @@ public class AnthropicController {
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@Valid @RequestBody ChatRequest request) {
-        ChatResponse response = anthropicService.chat(request.getPrompt());
+        ChatResponse response = anthropicService.chat(request.getPrompt(), request.getTemperature());
         return ResponseEntity.ok(response);
     }
 
