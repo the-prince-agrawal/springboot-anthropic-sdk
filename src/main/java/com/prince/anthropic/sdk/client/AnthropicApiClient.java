@@ -25,11 +25,15 @@ public class AnthropicApiClient {
     @Value("${anthropic.max-tokens}")
     private Integer maxTokens;
 
-    public String chat(List<ChatMessage> history) {
-        log.info("Chat history: {}", history);
+    public String chat(List<ChatMessage> history, String systemPrompt) {
+
+        log.debug("Chat history: {}", history);
+        log.debug("System prompt: {}", systemPrompt);
+
         MessageCreateParams.Builder builder = MessageCreateParams.builder()
             .model(model)
-            .maxTokens(maxTokens);
+            .maxTokens(maxTokens)
+            .system(systemPrompt);
 
         for (ChatMessage message : history) {
             if (message.getRole() == Role.USER) {
