@@ -1,43 +1,52 @@
-
 # Spring Boot Anthropic SDK
 
-> Production-ready Spring Boot integration with the official Anthropic Java SDK.
+> Production-ready Spring Boot integration with the official Anthropic
+> Java SDK.
 
 ## Overview
 
-This project demonstrates how to integrate the official Anthropic Java SDK into a Spring Boot REST application using a clean layered architecture.
+This project demonstrates how to integrate the official Anthropic Java
+SDK into a Spring Boot REST application using a clean layered
+architecture.
 
 ### Features
 
-- Spring Boot REST API
-- Official Anthropic Java SDK
-- Externalized configuration
-- DTO based request/response
-- Service layer
-- Client abstraction
-- Validation
-- Global exception handling
-- Maven project
+-   Spring Boot REST API
+-   Official Anthropic Java SDK
+-   Externalized configuration
+-   DTO based request/response
+-   Service layer
+-   Client abstraction
+-   Validation
+-   Global exception handling
+-   In-memory multi-turn conversations
+-   Conversation history APIs
+-   Swagger/OpenAPI
+-   Maven project
 
 ## Tech Stack
 
-- Java 17+
-- Spring Boot
-- Maven
-- Anthropic Java SDK
-- Lombok
+-   Java 17+
+-   Spring Boot
+-   Maven
+-   Anthropic Java SDK
+-   Lombok
+-   SpringDoc OpenAPI
 
 ## Project Structure
 
-```text
+``` text
 src/main/java
 └── com.prince.anthropic.sdk
     ├── client
     ├── config
     ├── controller
     ├── dto
+    ├── enums
     ├── exception
+    ├── models
     ├── service
+    ├── store
     └── AnthropicSdkApplication
 ```
 
@@ -45,7 +54,7 @@ src/main/java
 
 application.yml
 
-```yaml
+``` yaml
 anthropic:
   api-key: ${EP_ACC_ANTHOPIC_KEY}
   model: claude-haiku-4-5-20251001
@@ -56,50 +65,48 @@ anthropic:
 
 Windows CMD
 
-```cmd
+``` cmd
 echo %EP_ACC_ANTHOPIC_KEY%
 ```
 
 PowerShell
 
-```powershell
+``` powershell
 echo $env:EP_ACC_ANTHOPIC_KEY
 ```
 
 ## Run
 
-```bash
+``` bash
 mvn clean install
 mvn spring-boot:run
 ```
 
 Server
 
-```
-http://localhost:8080
-```
+    http://localhost:8080
 
----
+Swagger UI
+
+    http://localhost:8080/swagger-ui/index.html
+
+OpenAPI
+
+    http://localhost:8080/api-docs
+
+------------------------------------------------------------------------
 
 # REST API
 
-## Chat
+## 1. Chat
 
 **POST**
 
-```
-http://localhost:8080/api/anthropic/chat
-```
-
-Headers
-
-```
-Content-Type: application/json
-```
+    http://localhost:8080/api/anthropic/chat
 
 Request
 
-```json
+``` json
 {
   "prompt": "What is the temperature at which Celsius and Fahrenheit become same? Answer in one sentence."
 }
@@ -107,15 +114,46 @@ Request
 
 Response
 
-```json
+``` json
 {
   "response": "At -40 degrees, Celsius and Fahrenheit have the same temperature value."
 }
 ```
 
+## 2. Get Conversation History
+
+**GET**
+
+    http://localhost:8080/api/anthropic/conversation
+
+Response
+
+``` json
+[
+  {
+    "role": "USER",
+    "content": "Hello"
+  },
+  {
+    "role": "ASSISTANT",
+    "content": "Hi! How can I help you?"
+  }
+]
+```
+
+## 3. Clear Conversation
+
+**POST**
+
+    http://localhost:8080/api/anthropic/conversation/clear
+
+Response
+
+    204 No Content
+
 ## cURL
 
-```bash
+``` bash
 curl --location "http://localhost:8080/api/anthropic/chat" \
 --header "Content-Type: application/json" \
 --data '{
@@ -125,7 +163,7 @@ curl --location "http://localhost:8080/api/anthropic/chat" \
 
 ## Architecture
 
-```text
+``` text
 Client
    │
    ▼
@@ -133,6 +171,9 @@ REST Controller
    │
    ▼
 Service Layer
+   │
+   ▼
+ConversationStore
    │
    ▼
 Anthropic API Client
@@ -147,27 +188,36 @@ Anthropic API
 Claude Model
 ```
 
-## Flow
+## Conversation Flow
 
-1. Client sends prompt.
-2. Controller receives request.
-3. Service invokes client.
-4. Anthropic SDK calls Claude API.
-5. Response is mapped to DTO.
-6. JSON returned to client.
+1.  User sends a prompt.
+2.  Service stores the user message in `ConversationStore`.
+3.  Complete conversation history is sent to Anthropic.
+4.  Claude generates a response.
+5.  Assistant response is stored in `ConversationStore`.
+6.  Response is returned to the client.
+
+## Current Implementation
+
+-   Conversation history is maintained in memory.
+-   Every chat request sends the complete conversation history to
+    Anthropic.
+-   Suitable for demos and local development.
+-   Production applications should store conversations in Redis or a
+    database using Conversation ID or User ID.
 
 ## Future Enhancements
 
-- Streaming Responses
-- Multi-turn Conversations
-- System Prompts
-- Tool Use
-- Structured Outputs
-- Vision API
-- PDF Support
-- MCP Integration
-- Prompt Caching
-- Observability
+-   Streaming Responses
+-   Persistent Conversation Storage
+-   System Prompts
+-   Tool Use
+-   Structured Outputs
+-   Vision API
+-   PDF Support
+-   MCP Integration
+-   Prompt Caching
+-   Observability
 
 ## License
 

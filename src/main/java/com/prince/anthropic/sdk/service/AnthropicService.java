@@ -2,17 +2,32 @@ package com.prince.anthropic.sdk.service;
 
 import com.prince.anthropic.sdk.client.AnthropicApiClient;
 import com.prince.anthropic.sdk.dto.ChatResponse;
+import com.prince.anthropic.sdk.models.ChatMessage;
+import com.prince.anthropic.sdk.store.ConversationStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class AnthropicService {
 
     private final AnthropicApiClient anthropicApiClient;
+    private final ConversationStore conversationStore;
 
     public ChatResponse chat(String prompt) {
-        String response = anthropicApiClient.chat(prompt);
+        conversationStore.addUserMessage(prompt);
+        String response = anthropicApiClient.chat(conversationStore.getHistory());
+        conversationStore.addAssistantMessage(response);
         return new ChatResponse(response);
+    }
+
+    public void clearConversation() {
+        conversationStore.clear();
+    }
+
+    public List<ChatMessage> getConversation() {
+        return conversationStore.getHistory();
     }
 }

@@ -9,3 +9,9 @@ anthropic:
   api-key:  ${EP_ACC_ANTHOPIC_KEY}
   model: claude-haiku-4-5-20251001
   max-tokens: 1000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
