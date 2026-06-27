@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -32,7 +33,8 @@ public class AnthropicApiClient {
     @Value("${anthropic.max-tokens}")
     private Integer maxTokens;
 
-    public String chat(List<ChatMessage> history, String systemPrompt, Temperature temperature) {
+    public String chat(List<ChatMessage> history, String systemPrompt, Temperature temperature,String assistantPrefill,
+                       List<String> stopSequences) {
 
         log.debug("Chat history: {}, System prompt: {}, Temperature: {}", history, systemPrompt, temperature);
 
@@ -50,6 +52,13 @@ public class AnthropicApiClient {
             } else {
                 builder.addAssistantMessage(message.getContent());
             }
+        }
+
+        if (assistantPrefill != null) {
+            builder.addAssistantMessage(assistantPrefill);
+        }
+        if (!CollectionUtils.isEmpty(stopSequences)) {
+            builder.stopSequences(stopSequences);
         }
 
         Message response = anthropicClient.messages().create(builder.build());

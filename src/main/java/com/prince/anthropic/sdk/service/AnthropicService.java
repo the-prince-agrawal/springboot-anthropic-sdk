@@ -26,7 +26,10 @@ public class AnthropicService {
     public ChatResponse chat(String prompt, Temperature temperature) {
         conversationStore.addUserMessage(prompt);
         String systemPrompt = SystemPrompt.getPrompt(systemPromptId);
-        String response = anthropicApiClient.chat(conversationStore.getHistory(), systemPrompt, temperature);
+
+        String assistantPrefill = "```json";
+        List<String> stopSequences = List.of("```");
+        String response = anthropicApiClient.chat(conversationStore.getHistory(), systemPrompt, temperature, assistantPrefill, stopSequences);
         conversationStore.addAssistantMessage(response);
         return new ChatResponse(response);
     }
