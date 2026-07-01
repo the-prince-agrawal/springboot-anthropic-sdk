@@ -23,6 +23,9 @@ public class AnthropicService {
     private final AnthropicApiClient anthropicApiClient;
     private final ConversationStore conversationStore;
 
+    public static final String REDACTED_THINKING_TRIGGER =
+        "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB";
+
     public ChatResponse chat(String prompt, Temperature temperature) {
         conversationStore.addUserMessage(prompt);
         String systemPrompt = SystemPrompt.getPrompt(systemPromptId);
