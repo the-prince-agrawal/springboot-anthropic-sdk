@@ -5,10 +5,16 @@ spring:
   application:
     name: springboot-anthropic-sdk
 
+#Note when thinking enabled dont use claude-haiku-4-5-20251001 model as it does not support thinking
+#Use claude-sonnet-4-6 model for thinking enabled
+#Max tokens should be more than thinking-budget
+
 anthropic:
   api-key:  ${EP_ACC_ANTHOPIC_KEY}
   model: claude-haiku-4-5-20251001
-  max-tokens: 5000
+  max-tokens: 3000 #Note: Max tokens should be more than thinking-budget
+  thinking-budget: 1024
+  thinking-enabled: false  #for thinking use model claude-sonnet-4-6, claude-haiku-4-5-20251001 does not support thinking
   system-prompt-id: GENERAL_ASSISTANT
 
 springdoc:

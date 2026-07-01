@@ -8,6 +8,8 @@ import com.anthropic.models.messages.RawContentBlockDelta;
 import com.anthropic.models.messages.RawContentBlockDeltaEvent;
 import com.anthropic.models.messages.RawMessageStreamEvent;
 import com.anthropic.models.messages.TextDelta;
+import com.anthropic.models.messages.ThinkingConfigEnabled;
+import com.anthropic.models.messages.ThinkingConfigParam;
 import com.prince.anthropic.sdk.enums.Role;
 import com.prince.anthropic.sdk.enums.Temperature;
 import com.prince.anthropic.sdk.models.ChatMessage;
@@ -33,7 +35,16 @@ public class AnthropicApiClient {
     @Value("${anthropic.max-tokens}")
     private Integer maxTokens;
 
-    public String chat(List<ChatMessage> history, String systemPrompt, Temperature temperature,String assistantPrefill,
+    @Value("${anthropic.thinking-budget:1024}")
+    private Long thinkingBudget;
+
+    @Value("${anthropic.thinking-enabled}")
+    private boolean thinkingEnabled;
+
+    public String chat(List<ChatMessage> history,
+                       String systemPrompt,
+                       Temperature temperature,
+                       String assistantPrefill,
                        List<String> stopSequences) {
 
         log.debug("Chat history: {}, System prompt: {}, Temperature: {}", history, systemPrompt, temperature);
@@ -41,10 +52,17 @@ public class AnthropicApiClient {
         MessageCreateParams.Builder builder = MessageCreateParams.builder()
             .model(model)
             .maxTokens(maxTokens)
-            .system(systemPrompt)
+            .system(systemPrompt);
+
+        if(thinkingEnabled){
+            ThinkingConfigEnabled thinking = ThinkingConfigEnabled.builder().budgetTokens(thinkingBudget).build();
+            builder.thinking(ThinkingConfigParam.ofEnabled(thinking));
+        }else{
             // temperature() is deprecated by Anthropic.
             // This is included only for learning/demo purposes.
-            .temperature(temperature.getValue());
+            builder.temperature(temperature.getValue());
+        }
+
 
         for (ChatMessage message : history) {
             if (message.getRole() == Role.USER) {
@@ -54,7 +72,8 @@ public class AnthropicApiClient {
             }
         }
 
-        if (assistantPrefill != null) {
+        //Note: Opus model does not support assistant message prefill
+        if (assistantPrefill != null && !model.contains("sonnet")) {
             builder.addAssistantMessage(assistantPrefill);
         }
         if (!CollectionUtils.isEmpty(stopSequences)) {
@@ -62,7 +81,11 @@ public class AnthropicApiClient {
         }
 
         Message response = anthropicClient.messages().create(builder.build());
-        return response.content().get(0).text().get().text();
+        return response.content().stream()
+            .filter(block -> block.text().isPresent())
+            .findFirst()
+            .map(block -> block.text().get().text())
+            .orElseThrow(() -> new RuntimeException("No text content in response"));
     }
 
     public void chatStream(List<ChatMessage> history, String systemPrompt, Temperature temperature, Consumer<String> consumer) {
