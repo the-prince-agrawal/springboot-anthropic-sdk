@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -47,6 +49,14 @@ public class AnthropicController {
     public ResponseEntity<Void> clearConversation() {
         anthropicService.clearConversation();
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChatResponse> image(
+        @RequestParam("image") MultipartFile image,
+        @RequestParam(defaultValue = "Describe this image.") String prompt) {
+
+        return ResponseEntity.ok(anthropicService.image(image, prompt));
     }
 
     @GetMapping("/conversation")

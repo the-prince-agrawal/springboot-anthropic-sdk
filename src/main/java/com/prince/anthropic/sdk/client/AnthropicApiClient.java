@@ -2,11 +2,15 @@ package com.prince.anthropic.sdk.client;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.core.http.StreamResponse;
+import com.anthropic.models.messages.Base64ImageSource;
+import com.anthropic.models.messages.ContentBlockParam;
+import com.anthropic.models.messages.ImageBlockParam;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.anthropic.models.messages.RawContentBlockDelta;
 import com.anthropic.models.messages.RawContentBlockDeltaEvent;
 import com.anthropic.models.messages.RawMessageStreamEvent;
+import com.anthropic.models.messages.TextBlockParam;
 import com.anthropic.models.messages.TextDelta;
 import com.anthropic.models.messages.ThinkingConfigEnabled;
 import com.anthropic.models.messages.ThinkingConfigParam;
@@ -18,7 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -88,6 +94,49 @@ public class AnthropicApiClient {
             .orElseThrow(() -> new RuntimeException("No text content in response"));
     }
 
+    public String image(MultipartFile image, String prompt) {
+
+        try {
+
+            String base64 = Base64.getEncoder().encodeToString(image.getBytes());
+
+            MessageCreateParams.Builder builder = MessageCreateParams.builder()
+                .model(model)
+                .maxTokens(maxTokens);
+
+            Base64ImageSource source = Base64ImageSource.builder()
+                .data(base64)
+                .mediaType(toMediaType(image.getContentType()))
+                .build();
+
+            builder.addUserMessageOfBlockParams(
+                List.of(
+                    ContentBlockParam.ofImage(
+                        ImageBlockParam.builder()
+                            .source(source)
+                            .build()
+                    ),
+                    ContentBlockParam.ofText(
+                        TextBlockParam.builder()
+                            .text(prompt)
+                            .build()
+                    )
+                )
+            );
+
+            Message response = anthropicClient.messages().create(builder.build());
+
+            return response.content().stream()
+                .filter(block -> block.text().isPresent())
+                .findFirst()
+                .map(block -> block.text().get().text())
+                .orElseThrow();
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void chatStream(List<ChatMessage> history, String systemPrompt, Temperature temperature, Consumer<String> consumer) {
         MessageCreateParams.Builder builder = MessageCreateParams.builder()
             .model(model)
@@ -117,5 +166,16 @@ public class AnthropicApiClient {
                 consumer.accept(textDelta.text());
             });
         }
+    }
+
+    private Base64ImageSource.MediaType toMediaType(String contentType) {
+        return switch (contentType) {
+            case "image/jpeg" -> Base64ImageSource.MediaType.IMAGE_JPEG;
+            case "image/png"  -> Base64ImageSource.MediaType.IMAGE_PNG;
+            case "image/gif"  -> Base64ImageSource.MediaType.IMAGE_GIF;
+            case "image/webp" -> Base64ImageSource.MediaType.IMAGE_WEBP;
+            default -> throw new IllegalArgumentException(
+                "Unsupported image type: " + contentType);
+        };
     }
 }

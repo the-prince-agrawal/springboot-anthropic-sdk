@@ -9,6 +9,7 @@ import com.prince.anthropic.sdk.store.ConversationStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -60,6 +61,11 @@ public class AnthropicService {
                 emitter.completeWithError(e);
             }
         }).start();
+    }
+
+    public ChatResponse image(MultipartFile image, String prompt) {
+        String response = anthropicApiClient.image(image, prompt);
+        return new ChatResponse(response);
     }
 
     public void clearConversation() {
